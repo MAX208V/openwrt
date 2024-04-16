@@ -16,5 +16,5 @@
 git clone https://github.com/siropboy/sirpdboy-package package/sirpdboy-package package/sirpdboy
 
 # Add a feed source
-#echo 'src-git siropboy https://github.com/sirpdboy/sirpdboy-package' >>feeds.conf.default
+echo 'src-git siropboy https://github.com/sirpdboy/sirpdboy-package' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
