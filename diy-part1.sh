@@ -14,5 +14,5 @@
 #sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
 # Add a feed source
-echo 'src-git siropboy https://github.com/siropboy/sirpdboy-package' >>feeds.conf.default
+echo 'src-git siropboy https://github.com/sirpdboy/sirpdboy-package' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
