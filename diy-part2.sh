@@ -20,8 +20,7 @@
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
 
 # Modify startup
-sed -i '/^exit 0/i
-ip link set ra0 upn
-ip link set rai0 upn
-brctl addif br-lan ra0n
-brctl addif br-lan rai0' package/base-files/files/etc/rc.local
+sed -i '/^exit 0/i ip link set ra0 up' package/base-files/files/etc/rc.local
+sed -i '/^exit 0/i ip link set rai0 up' package/base-files/files/etc/rc.local
+sed -i '/^exit 0/i brctl addif br-lan ra0' package/base-files/files/etc/rc.local
+sed -i '/^exit 0/i brctl addif br-lan rai0' package/base-files/files/etc/rc.local
