@@ -24,4 +24,4 @@
 ip link set ra0 upn
 ip link set rai0 upn
 brctl addif br-lan ra0n
-brctl addif br-lan rai0' package/base-files/files/etc/rc.local
+#brctl addif br-lan rai0' package/base-files/files/etc/rc.local
