@@ -13,6 +13,6 @@
 #sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 # git获取源码
 echo 'src-git sirpdboy https://github.com/siropboy/sirpdboy-package' >>feeds.conf.default
-echo 'src-git luci-app-jd-dailybonus https://github.com/noiver/luci-app-jd-dailybonus' >>feeds.conf.default
+echo 'src-git jd https://github.com/noiver/luci-app-jd-dailybonus' >>feeds.conf.default
 echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
