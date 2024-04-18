@@ -29,7 +29,7 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
-- name: 设置工作
+  name: 设置工作
   build:
     runs-on: ubuntu-22.04
 
