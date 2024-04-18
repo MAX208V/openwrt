@@ -9,7 +9,7 @@
 # See /LICENSE for more information.
 #
 
-name: Openwrt Only plugins
+name: Openwrt plugins
 
 on:
   repository_dispatch:
