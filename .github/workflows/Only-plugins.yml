@@ -95,7 +95,7 @@ jobs:
         echo 'export PATH="/usr/lib/ccache:$PATH"' >> $GITHUB_ENV
         echo 'export CCACHE_DIR="/path/to/ccache/directory"' >> $GITHUB_ENV
 
-    - name: 编译固件
+    - name: 编译插件
       id: compile
       run: |
         ccache -s
