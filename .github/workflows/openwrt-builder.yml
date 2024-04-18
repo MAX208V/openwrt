@@ -9,7 +9,7 @@
 # See /LICENSE for more information.
 #
 
-name: OpenWrt Builder
+name: LEDE Builder
 
 on:
   repository_dispatch:
