@@ -29,11 +29,12 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
+- name: 设置工作
   build:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: 使用预设actions
+    - name: 使用基础动作
       uses: actions/checkout@main
 
     - name: 初始化环境
