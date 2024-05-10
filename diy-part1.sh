@@ -14,5 +14,7 @@
 
 # git获取源码
 git clone https://github.com/sirpdboy/sirpdboy-package package/sirpdboy-package
+#echo获取源码
+echo "src-git lienol https://github.com/Lienol/openwrt-package" >> feeds.conf.default
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
