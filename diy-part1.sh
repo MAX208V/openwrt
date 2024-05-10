@@ -13,7 +13,7 @@
 #sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
 # git获取源码
-git clone https://github.com/sirpdboy/sirpdboy-package package/sirpdboy-package
+#git clone https://github.com/sirpdboy/sirpdboy-package package/sirpdboy-package
 
 #echo获取源码
 echo "src-git lienol https://github.com/Lienol/openwrt-package" >> feeds.conf.default
