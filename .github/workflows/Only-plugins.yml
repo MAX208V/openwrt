@@ -97,7 +97,7 @@ jobs:
         cd openwrt
         make defconfig
         make download -j8
-      if: steps.cache-packages.outputs.cache-hit != 'true'
+      if: steps.cache-step.outputs.cache-hit != 'true'
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
                 
