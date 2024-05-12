@@ -118,7 +118,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-      /workdir/openwrt/build_dir/target-*/*/packages
+          /workdir/openwrt/build_dir/target-*/*/packages
         key: ${{ runner.os }}-openwrt-packages-${{ hashFiles('**/.config') }}
         
     - name: 检查空间使用情况
