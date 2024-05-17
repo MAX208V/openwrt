@@ -38,10 +38,12 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: Cache OpenWrt source and build directory
-      uses: actions/cache@v4
+    - name: Cache ccache and build directories
+      uses: actions/cache@v3
       with:
-        path: /workdir
+        path: |
+          /workdir/openwrt
+          /workdir/ccache
         key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '**/.config', '**/diy-part1.sh', '**/diy-part2.sh') }}
         restore-keys: |
           ${{ runner.os }}-openwrt-
@@ -76,7 +78,7 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Cache package downloads
-      uses: actions/cache@v4
+      uses: actions/cache@v3
       with:
         path: openwrt/dl
         key: ${{ runner.os }}-openwrt-packages-${{ hashFiles('openwrt/.config') }}
@@ -92,12 +94,22 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
+    - name: Configure ccache
+      run: |
+        cd openwrt
+        export CCACHE_DIR=/workdir/ccache
+        export CCACHE_COMPRESS=true
+        export CCACHE_MAXSIZE=10G
+        export CCACHE_SLOPPINESS="file_macro,time_macros,include_file_mtime,include_file_ctime"
+        make menuconfig
+
     - name: Compile the firmware
       id: compile
       run: |
         cd openwrt
+        export CCACHE_DIR=/workdir/ccache
         echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        make -j$(nproc) CC="ccache gcc" CXX="ccache g++" || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
@@ -122,7 +134,7 @@ jobs:
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
-        
+
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
       with:
