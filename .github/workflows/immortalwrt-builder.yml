@@ -22,7 +22,7 @@ jobs:
 
     steps:
     - name: Cache environment setup
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: /workdir
         key: ${{ runner.os }}-env-setup-${{ hashFiles('**/*.sh') }}
@@ -43,7 +43,7 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Cache source code
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: /workdir/openwrt
         key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '**/.config', '**/diy-part1.sh', '**/diy-part2.sh') }}
