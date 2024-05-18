@@ -39,7 +39,7 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Cache ccache and build directories
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           /workdir/openwrt
@@ -78,7 +78,7 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Cache package downloads
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: openwrt/dl
         key: ${{ runner.os }}-openwrt-packages-${{ hashFiles('openwrt/.config') }}
