@@ -19,6 +19,9 @@
 #修改 主机名为 "2077S-X"
 sed -i 's/OpenWrt/2077S-X/g' package/base-files/files/bin/config_generate
 
+# 设置 root 密码
+sed -i "s/option password 'your_password'/option password '${ROOT_PASSWORD}'/g" package/base-files/files/etc/config/system
+
 #修改 WAN 协议为 "DHCP"
 sed -i '/config interface 'wan'/,/^$/ s/option proto .*/option proto 'dhcp'/' package/base-files/files/etc/config/network
 
@@ -27,6 +30,12 @@ sed -i 's/set wireless.default_radio${devidx}.ssid=OpenWrt/set wireless.default_
 
 # 修改5GHz WLAN 名称为 "2077S-X_5G"
 sed -i 's/set wireless.default_radio${devidx}.ssid=OpenWrt/set wireless.default_radio1.ssid=2077S-X_5G/g' package/kernel/mac80211/files/lib/wifi/mac80211.sh
+
+# 修改2.4GHz WLAN 密码
+sed -i 's/set wireless.default_radio${devidx}.key=${{ secrets.WIFI_PASSWORD }}/set wireless.default_radio0.key=14758900/g' package/kernel/mac80211/files/lib/wifi/mac80211.sh
+
+# 修改5GHz WLAN 密码
+sed -i 's/set wireless.default_radio${devidx}.key=${{ secrets.WIFI_PASSWORD }}/set wireless.default_radio1.key=14758900/g' package/kernel/mac80211/files/lib/wifi/mac80211.sh
 
 # 修改 无线 状态为 开机启动
 sed -i '/^exit 0/i ip link set ra0 up' package/base-files/files/etc/rc.local
