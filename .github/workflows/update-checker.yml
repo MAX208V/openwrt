@@ -1,58 +1,93 @@
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-#
-# File: .github/workflows/update-checker.yml
-# Description: Source code update checker
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
-
 name: Update Checker
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
-  REPO_BRANCH: master
+  REPO_URL_1: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH_1: master
+  REPO_URL_2: https://github.com/anotheruser/anotherrepo
+  REPO_BRANCH_2: main
 
 on:
   workflow_dispatch:
-#  schedule:
-#    - cron: 0 */18 * * *
+  schedule:
+    - cron: '0 */18 * * *'  # 每 18 小时运行一次
 
 jobs:
-  check:
+  check-repo-1:
     runs-on: ubuntu-latest
 
     steps:
-
-    - name: Get Commit Hash
-      id: getHash
+    - name: Get Commit Hash for Repo 1
+      id: getHashRepo1
       run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH .
-        echo "commitHash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        git clone --depth 1 ${{ env.REPO_URL_1 }} -b ${{ env.REPO_BRANCH_1 }} repo1
+        cd repo1
+        echo "commitHash1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-    - name: Compare Commit Hash
-      id: cacheHash
+    - name: Compare Commit Hash for Repo 1
+      id: cacheHashRepo1
       uses: actions/cache@v4
       with:
-        path: .commitHash
-        key: commitHash_${{ steps.getHash.outputs.commitHash }}
+        path: .commitHashRepo1
+        key: commitHashRepo1_${{ steps.getHashRepo1.outputs.commitHash1 }}
 
-    - name: Save New Commit Hash
-      if: steps.cacheHash.outputs.cache-hit != 'true'
+    - name: Save New Commit Hash for Repo 1
+      if: steps.cacheHashRepo1.outputs.cache-hit != 'true'
       run: |
-        echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+        echo ${{ steps.getHashRepo1.outputs.commitHash1 }} | tee .commitHashRepo1
 
-    - name: Trigger build
-      if: steps.cacheHash.outputs.cache-hit != 'true'
-      uses: peter-evans/repository-dispatch@v3
+    - name: Generate configuration file for Repo 1
+      if: steps.cacheHashRepo1.outputs.cache-hit != 'true'
+      run: |
+        cd repo1
+        make defconfig
+
+    - name: Trigger build for Repo 1
+      if: steps.cacheHashRepo1.outputs.cache-hit != 'true'
+      uses: peter-evans/repository-dispatch@v2
       with:
         token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
-        event-type: Source Code Update
+        event-type: source_code_update_repo1
 
-    - name: Delete workflow runs
+  check-repo-2:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get Commit Hash for Repo 2
+      id: getHashRepo2
+      run: |
+        git clone --depth 1 ${{ env.REPO_URL_2 }} -b ${{ env.REPO_BRANCH_2 }} repo2
+        cd repo2
+        echo "commitHash2=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Compare Commit Hash for Repo 2
+      id: cacheHashRepo2
+      uses: actions/cache@v4
+      with:
+        path: .commitHashRepo2
+        key: commitHashRepo2_${{ steps.getHashRepo2.outputs.commitHash2 }}
+
+    - name: Save New Commit Hash for Repo 2
+      if: steps.cacheHashRepo2.outputs.cache-hit != 'true'
+      run: |
+        echo ${{ steps.getHashRepo2.outputs.commitHash2 }} | tee .commitHashRepo2
+
+    - name: Generate configuration file for Repo 2
+      if: steps.cacheHashRepo2.outputs.cache-hit != 'true'
+      run: |
+        cd repo2
+        make defconfig
+
+    - name: Trigger build for Repo 2
+      if: steps.cacheHashRepo2.outputs.cache-hit != 'true'
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        event-type: source_code_update_repo2
+
+  delete-old-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Delete old workflow runs
       uses: Mattraks/delete-workflow-runs@v2
       with:
         token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
