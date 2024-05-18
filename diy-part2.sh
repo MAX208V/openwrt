@@ -16,8 +16,11 @@
 # Modify default theme
 #sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
 
-Modify hostname
+#Modify hostname
 sed -i 's/OpenWrt/2077S-X/g' package/base-files/files/bin/config_generate
+
+#Modify wan
+sed -i '/config interface 'wan'/,/^$/ s/option proto .*/option proto 'dhcp'/' package/base-files/files/etc/config/network
 
 # Modify startup
 sed -i '/^exit 0/i ip link set ra0 up' package/base-files/files/etc/rc.local
