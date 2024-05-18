@@ -24,7 +24,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Initialization environment
+    - name: Initialize environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -42,10 +42,20 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH .
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
+    - name: Cache repository information
+      id: cache_repo_info
+      uses: actions/cache@v4
+      with:
+        path: openwrt
+        key: ${{ runner.os }}-openwrt-repo-${{ hashFiles('**/.git') }}
+        restore-keys: |
+          ${{ runner.os }}-openwrt-repo-
+
     - name: Load custom feeds
+      if: steps.cache_repo_info.outputs.cache-hit != 'true'
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
@@ -53,12 +63,15 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
     - name: Update feeds
+      if: steps.cache_repo_info.outputs.cache-hit != 'true'
       run: cd openwrt && ./scripts/feeds update -a
 
     - name: Install feeds
+      if: steps.cache_repo_info.outputs.cache-hit != 'true'
       run: cd openwrt && ./scripts/feeds install -a
 
     - name: Load custom configuration
+      if: steps.cache_repo_info.outputs.cache-hit != 'true'
       run: |
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
@@ -66,17 +79,22 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Download package
-      id: package
+    - name: Check repository status
+      id: repo_status
       run: |
         cd openwrt
-        make defconfig
-        make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
+        git fetch
+        LOCAL=$(git rev-parse @)
+        REMOTE=$(git rev-parse @{u})
+        if [ $LOCAL != $REMOTE ]; then
+          echo "::set-output name=updated::true"
+        else
+          echo "::set-output name=updated::false"
+        fi
 
     - name: Restore cache
       id: cache
+      if: steps.repo_status.outputs.updated != 'true'
       uses: actions/cache@v4
       with:
         path: openwrt/build_dir
@@ -84,28 +102,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-openwrt-
 
-    - name: Check for new package versions
-      id: check_versions
-      run: |
-        NEW_VERSION_AVAILABLE=false
-        CURRENT_VERSION=$(cat openwrt/current-version.txt || echo "none")
-        LATEST_VERSION=$(curl -s https://example.com/latest-version)
-        
-        echo "Current version: $CURRENT_VERSION"
-        echo "Latest version: $LATEST_VERSION"
-        
-        if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
-          echo "New version available"
-          NEW_VERSION_AVAILABLE=true
-        else
-          echo "No new version"
-        fi
-        
-        echo "new_version_available=$NEW_VERSION_AVAILABLE" >> $GITHUB_ENV
-
     - name: Compile the firmware
       id: compile
-      if: steps.cache.outputs.cache-hit == 'false' || env.new_version_available == 'true'
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
@@ -115,9 +114,6 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-        
-        # Save the latest version to current-version.txt
-        echo "$LATEST_VERSION" > current-version.txt
 
     - name: Save built packages to cache
       if: steps.compile.outcome == 'success'
@@ -140,52 +136,3 @@ jobs:
       with:
         name: OpenWrt_immortal_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
-
-    - name: Organize files
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
-      run: |
-        cd openwrt/bin/targets/*/*
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: Upload firmware directory
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: OpenWrt_immortalwrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
-
-    - name: Generate release tag
-      id: tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-        touch release.txt
-        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
-        echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: Upload firmware to release
-      uses: softprops/action-gh-release@master
-      if: steps.tag.outputs.status == 'success' && !cancelled()
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
-      with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        body_path: release.txt
-        files: ${{ env.FIRMWARE }}/*
-
-    - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@main
-      with:
-        retain_days: 0
-        keep_minimum_runs: 2
-
-    - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@master
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      with:
-        keep_latest: 3
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
