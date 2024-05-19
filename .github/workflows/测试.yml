@@ -35,15 +35,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      
-    - name: Cache OpenWrt directory
-      uses: actions/cache@v4
-      with:
-        path: /workdir/  # 要缓存的目录路径
-        key: ${{ runner.os }}-Dependencies
-        restore-keys: |
-          ${{ runner.os }}-Dependencies
-          
+           
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
