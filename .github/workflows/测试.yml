@@ -38,13 +38,13 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
         
-    - name: Restore cached OpenWrt directory
-      uses: actions/cache@v4
-      with:
-        path: /workdir/openwrt
-        key: ${{ runner.os }}-openwrt
-        restore-keys: |
-          ${{ runner.os }}-openwrt
+    #- name: Restore cached OpenWrt directory
+      #uses: actions/cache@v4
+      #with:
+        #path: /workdir/openwrt
+        #key: ${{ runner.os }}-openwrt
+        #restore-keys: |
+          #${{ runner.os }}-openwrt
 
     - name: Clone source code
       working-directory: /workdir
@@ -61,11 +61,11 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    #- name: Update feeds
-      #run: cd openwrt && ./scripts/feeds update -a
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
 
-    #- name: Install feeds
-      #run: cd openwrt && ./scripts/feeds install -a
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
