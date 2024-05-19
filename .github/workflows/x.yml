@@ -1,0 +1,16 @@
+name: OpenWrt x Builder
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
+env:
+  REPO_URL: https://github.com/immortalwrt/immortalwrt
+  REPO_BRANCH: master
+
+jobs:
+  print_repo_name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print repository name
+        run: echo "${{ github.repository }}"
