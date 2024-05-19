@@ -15,4 +15,4 @@ jobs:
         run: |
           repo_url=${{ env.REPO_URL }}
           repo_name=$(basename $repo_url)
-          echo "Repository name: $repo_name"
+          echo "Repository name: $repo_name ${{ env.DEVICE_NAME }}"
