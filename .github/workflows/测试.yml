@@ -37,6 +37,14 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+        
+    - name: Restore cached OpenWrt directory
+      uses: actions/cache@v4
+      with:
+        path: /workdir/openwrt
+        key: ${{ runner.os }}-openwrt
+        restore-keys: |
+          ${{ runner.os }}-openwrt
 
     - name: Clone source code
       working-directory: /workdir
@@ -66,20 +74,6 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
         
-    - name: Use cached directory if exists
-      if: steps.check_cache.outputs.cache_exists == 'true'
-      run: |
-        ls $GITHUB_WORKSPACE/openwrt
-
-    - name: Download or build if cache does not exist
-      if: steps.check_cache.outputs.cache_exists != 'true'
-      run: |
-        cd openwrt
-        make defconfig
-        make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
-
     - name: Compile the firmware
       id: compile
       run: |
@@ -94,11 +88,9 @@ jobs:
     - name: Cache OpenWrt directory
       uses: actions/cache@v4
       with:
-        path: /workdir/openwrt  # 要缓存的目录路径
+        path: /workdir/openwrt
         key: ${{ runner.os }}-openwrt
-        restore-keys: |
-          ${{ runner.os }}-openwrt
-      
+    
     - name: Check space usage
       if: (!cancelled())
       run: df -hT
