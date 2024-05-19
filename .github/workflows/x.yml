@@ -1,4 +1,4 @@
-name: Open X
+name: X
 
 on:
   repository_dispatch:
@@ -6,11 +6,13 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: master
 
 jobs:
   print_repo_name:
     runs-on: ubuntu-latest
     steps:
-      - name: Print repository name
-        run: echo "${{ github.repository }}"
+      - name: Get repository name
+        run: |
+          repo_url=${{ env.REPO_URL }}
+          repo_name=$(basename $repo_url)
+          echo "Repository name: $repo_name"
