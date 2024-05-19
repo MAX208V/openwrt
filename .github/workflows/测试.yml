@@ -35,7 +35,13 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@main
-
+      
+    - name: Cache OpenWrt directory
+      uses: actions/cache@v4
+      with:
+        restore-keys: |
+          ${{ runner.os }}-Dependencies
+          
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -49,7 +55,15 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-
+        
+    - name: Cache OpenWrt directory
+      uses: actions/cache@v4
+      with:
+        path: /workdir/  # 要缓存的目录路径
+        key: ${{ runner.os }}-Dependencies
+        restore-keys: |
+          ${{ runner.os }}-Dependencies
+          
     - name: Clone source code
       working-directory: /workdir
       run: |
@@ -106,9 +120,11 @@ jobs:
     - name: Cache OpenWrt directory
       uses: actions/cache@v4
       with:
-        path: /workdir/openwrt
+        path: /workdir/openwrt  # 要缓存的目录路径
         key: ${{ runner.os }}-openwrt
-
+        restore-keys: |
+          ${{ runner.os }}-openwrt
+          
     - name: Compress cache directory
       run: tar -czf OpenWrt-cache.tar.gz -C /workdir openwrt
 
