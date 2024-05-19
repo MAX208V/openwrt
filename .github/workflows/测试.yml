@@ -38,6 +38,7 @@ jobs:
       
     - name: Cache OpenWrt directory
       uses: actions/cache@v4
+      key: ${{ runner.os }}-Dependencies
       with:
         restore-keys: |
           ${{ runner.os }}-Dependencies
