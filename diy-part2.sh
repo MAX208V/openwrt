@@ -20,7 +20,7 @@
 sed -i 's/OpenWrt/2077S-X/g' package/base-files/files/bin/config_generate
 
 # 设置 root 密码
-sed -i "s/option password 'your_password'/option password '${secrets.ROOT_PASSWORD}'/g" package/base-files/files/etc/config/system
+sed -i 's/root::0:0:99999:7:::/${{ secrets.ROOT_PASSWORD }}/g' package/base-files/files/etc/shadow
 
 #修改 WAN 协议为 "DHCP"
 sed -i '/config interface 'wan'/,/^$/ s/option proto .*/option proto 'dhcp'/' package/base-files/files/etc/config/network
