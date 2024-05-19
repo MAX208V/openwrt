@@ -38,9 +38,9 @@ jobs:
       
     - name: Cache OpenWrt directory
       uses: actions/cache@v4
-      path: /workdir/
-      key: ${{ runner.os }}-Dependencies
       with:
+        path: /workdir/  # 要缓存的目录路径
+        key: ${{ runner.os }}-Dependencies
         restore-keys: |
           ${{ runner.os }}-Dependencies
           
