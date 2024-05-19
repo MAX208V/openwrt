@@ -1,4 +1,4 @@
-name: OpenWrt x Builder
+name: Open X
 
 on:
   repository_dispatch:
