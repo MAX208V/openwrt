@@ -126,6 +126,7 @@ jobs:
           ${{ runner.os }}-openwrt
           
     - name: Compress cache directory
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       run: tar -czf OpenWrt-cache.tar.gz -C /workdir openwrt
 
     - name: Upload OpenWrt cache artifact
