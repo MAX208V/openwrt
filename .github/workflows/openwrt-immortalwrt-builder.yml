@@ -155,7 +155,7 @@ jobs:
       uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        
         keep_latest: 3
         delete_tags: true
       env:
