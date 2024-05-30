@@ -28,19 +28,12 @@ jobs:
       id: cache-apt
       uses: actions/cache@v4
       with:
-        path: /usr/local/lib/android
-        key: ${{ runner.os }}-apt-${{ hashFiles('apt-packages.txt') }}
+        path: /var/cache/apt/archives
+        key: ${{ runner.os }}-apt-${{ hashFiles('workflow.yml') }}
         restore-keys: |
           ${{ runner.os }}-apt-
 
-    - name: Save apt package list
-      run: |
-        sudo -E apt-get -qq update
-        sudo -E apt-get -qq install -y ack
-        apt list --installed > apt-packages.txt
-
-    - name: Initialization environment
-      if: steps.cache-apt.outputs.cache-hit != 'true'
+    - name: Initialize environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -54,13 +47,13 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: Cache installed apt packages
+    - name: Cache installed dependencies
       if: steps.cache-apt.outputs.cache-hit != 'true'
       uses: actions/cache@v4
       with:
-        path: /usr/local/lib/android
-        key: ${{ runner.os }}-apt-${{ hashFiles('apt-packages.txt') }}
-             
+        path: /var/cache/apt/archives
+        key: ${{ runner.os }}-apt-${{ hashFiles('workflow.yml') }}
+
     - name: Clone source code
       working-directory: /workdir
       run: |
