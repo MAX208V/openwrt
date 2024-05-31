@@ -1,4 +1,4 @@
-name: Delete Workflow
+name: Delete Workflows
 
 on:
   schedule:
@@ -30,7 +30,7 @@ jobs:
           echo "from datetime import datetime, timezone" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
           echo "# 获取 GitHub Token 和仓库信息" >> cleanup_workflows.py
-          echo "GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')" >> cleanup_workflows.py
+          echo "GITHUB_TOKEN = os.getenv('TOKEN')" >> cleanup_workflows.py  # 使用名为 TOKEN 的环境变量
           echo "REPO = os.getenv('GITHUB_REPOSITORY')" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
           echo "# 设置 API 请求头" >> cleanup_workflows.py
@@ -73,5 +73,5 @@ jobs:
 
       - name: Run cleanup script
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN: ${{ secrets.TOKEN }}  # 使用名为 TOKEN 的 secret
         run: python cleanup_workflows.py
