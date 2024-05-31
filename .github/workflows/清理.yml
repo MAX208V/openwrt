@@ -30,7 +30,7 @@ jobs:
           echo "from datetime import datetime, timezone" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
           echo "# 获取 GitHub Token 和仓库信息" >> cleanup_workflows.py
-          echo "GITHUB_TOKEN = os.getenv('TOKEN')" >> cleanup_workflows.py  # 使用名为 TOKEN 的环境变量
+          echo "GITHUB_TOKEN = os.getenv('TOKEN')" >> cleanup_workflows.py
           echo "REPO = os.getenv('GITHUB_REPOSITORY')" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
           echo "# 设置 API 请求头" >> cleanup_workflows.py
@@ -58,14 +58,14 @@ jobs:
           echo "    # 获取所有工作流运行" >> cleanup_workflows.py
           echo "    runs = get_workflow_runs()" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
-          echo "    # 过滤出运行时间小于5分钟的工作流" >> cleanup_workflows.py
-          echo "    short_runs = [run for run in runs if (datetime.fromisoformat(run['updated_at'].replace('Z', '+00:00')) - datetime.fromisoformat(run['created_at'].replace('Z', '+00:00'))).total_seconds() < 300]" >> cleanup_workflows.py
+          echo "    # 过滤出运行时间大于等于5分钟的工作流" >> cleanup_workflows.py
+          echo "    valid_runs = [run for run in runs if (datetime.fromisoformat(run['updated_at'].replace('Z', '+00:00')) - datetime.fromisoformat(run['created_at'].replace('Z', '+00:00'))).total_seconds() >= 300]" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
           echo "    # 按时间排序（最新的在前）" >> cleanup_workflows.py
-          echo "    short_runs.sort(key=lambda run: run['created_at'], reverse=True)" >> cleanup_workflows.py
+          echo "    valid_runs.sort(key=lambda run: run['created_at'], reverse=True)" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
           echo "    # 保留最近两条工作流，删除其余的" >> cleanup_workflows.py
-          echo "    for run in short_runs[2:]:" >> cleanup_workflows.py
+          echo "    for run in valid_runs[2:]:" >> cleanup_workflows.py
           echo "        delete_workflow_run(run['id'])" >> cleanup_workflows.py
           echo "" >> cleanup_workflows.py
           echo "if __name__ == '__main__':" >> cleanup_workflows.py
