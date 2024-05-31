@@ -1,4 +1,4 @@
-name: 清理
+name: 清理Workflow
 
 on:
   schedule:
