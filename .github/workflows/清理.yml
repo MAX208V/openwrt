@@ -1,9 +1,8 @@
 name: Delete Workflow
-
 on:
   schedule:
-    - cron: '0 0 * * *' # 每天运行一次
-  workflow_dispatch: # 手动触发
+    - cron: '0 0 * * *'  # 每天运行一次
+  workflow_dispatch:      # 手动触发
 
 jobs:
   cleanup:
@@ -23,52 +22,52 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Create cleanup script
-        run: |
-          echo "
-import os
-import requests
-from datetime import datetime, timezone
-
-token = os.getenv('GITHUB_TOKEN')
-repo = os.getenv('GITHUB_REPOSITORY')
-
-headers = {
-    'Authorization': f'Bearer {token}',
-    'Accept': 'application/vnd.github.v3+json',
-}
-
-def get_workflow_runs():
-    url = f'https://api.github.com/repos/{repo}/actions/runs'
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()['workflow_runs']
-
-def delete_run(run_id):
-    url = f'https://api.github.com/repos/{repo}/actions/runs/{run_id}'
-    response = requests.delete(url, headers=headers)
-    response.raise_for_status()
-
-def main():
-    runs = get_workflow_runs()
-    short_runs = [run for run in runs if (datetime.now(timezone.utc) - datetime.fromisoformat(run['created_at'][:-1])).total_seconds() / 60 < 5]
-    
-    # Sort short runs by created_at in descending order (most recent first)
-    short_runs.sort(key=lambda x: x['created_at'], reverse=True)
-    
-    # Keep the most recent 2 runs
-    runs_to_delete = short_runs[2:]
-
-    for run in runs_to_delete:
-        delete_run(run['id'])
-        print(f'Deleted run {run["id"]} - {run["html_url"]}')
-
-if __name__ == '__main__':
-    main()
-          " > cleanup_workflow_runs.py
-
-      - name: Clean up workflow runs
+      - name: Cleanup workflow runs
         env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python cleanup_workflow_runs.py
+          import os
+          import requests
+          from datetime import datetime, timezone
+
+          # 获取 GitHub Token 和仓库信息
+          GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+          REPO = os.getenv('GITHUB_REPOSITORY')
+
+          # 设置 API 请求头
+          headers = {
+              'Authorization': f'token {GITHUB_TOKEN}',
+              'Accept': 'application/vnd.github.v3+json'
+          }
+
+          # 获取工作流运行列表
+          def get_workflow_runs():
+              url = f'https://api.github.com/repos/{REPO}/actions/runs'
+              response = requests.get(url, headers=headers)
+              response.raise_for_status()
+              return response.json()['workflow_runs']
+
+          # 删除工作流运行
+          def delete_workflow_run(run_id):
+              url = f'https://api.github.com/repos/{REPO}/actions/runs/{run_id}'
+              response = requests.delete(url, headers=headers)
+              response.raise_for_status()
+              print(f'Deleted workflow run {run_id}')
+
+          # 主函数
+          def main():
+              # 获取所有工作流运行
+              runs = get_workflow_runs()
+
+              # 过滤出运行时间小于5分钟的工作流
+              short_runs = [run for run in runs if (datetime.fromisoformat(run['updated_at'].replace('Z', '+00:00')) - datetime.fromisoformat(run['created_at'].replace('Z', '+00:00'))).total_seconds() < 300]
+
+              # 按时间排序（最新的在前）
+              short_runs.sort(key=lambda run: run['created_at'], reverse=True)
+
+              # 保留最近两条工作流，删除其余的
+              for run in short_runs[2:]:
+                  delete_workflow_run(run['id'])
+
+          if __name__ == '__main__':
+              main()
