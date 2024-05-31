@@ -1,4 +1,4 @@
-name: 清理Workflow
+name: Delete Workflow
 
 on:
   schedule:
