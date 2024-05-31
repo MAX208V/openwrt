@@ -1,0 +1,74 @@
+name: Cleanup Short Workflow Runs
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天运行一次
+  workflow_dispatch: # 手动触发
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Clean up workflow runs
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        run: |
+          python cleanup_workflow_runs.py
+
+      - name: Clean up workflow runs script
+        run: |
+          echo "
+          import os
+          import requests
+          from datetime import datetime, timezone
+
+          token = os.getenv('GITHUB_TOKEN')
+          repo = os.getenv('GITHUB_REPOSITORY')
+
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github.v3+json',
+          }
+
+          def get_workflow_runs():
+              url = f'https://api.github.com/repos/{repo}/actions/runs'
+              response = requests.get(url, headers=headers)
+              response.raise_for_status()
+              return response.json()['workflow_runs']
+
+          def delete_run(run_id):
+              url = f'https://api.github.com/repos/{repo}/actions/runs/{run_id}'
+              response = requests.delete(url, headers=headers)
+              response.raise_for_status()
+
+          def main():
+              runs = get_workflow_runs()
+              short_runs = [run for run in runs if (datetime.now(timezone.utc) - datetime.fromisoformat(run['created_at'][:-1])).total_seconds() / 60 < 5]
+              
+              # Sort short runs by created_at in descending order (most recent first)
+              short_runs.sort(key=lambda x: x['created_at'], reverse=True)
+              
+              # Keep the most recent 2 runs
+              runs_to_delete = short_runs[2:]
+
+              for run in runs_to_delete:
+                  delete_run(run['id'])
+                  print(f'Deleted run {run["id"]} - {run["html_url"]}')
+
+          if __name__ == '__main__':
+              main()
+          " > cleanup_workflow_runs.py
