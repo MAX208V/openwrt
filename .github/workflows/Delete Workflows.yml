@@ -1,6 +1,7 @@
 name: Delete Workflows
 
 on:
+  repository_dispatch:
   workflow_run:
     workflows:
       - '*'
