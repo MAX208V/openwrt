@@ -10,7 +10,6 @@ on:
       - completed
     branches:
       - main
-
 jobs:
   delete-workflows:
     runs-on: ubuntu-latest
@@ -36,3 +35,4 @@ jobs:
                 repo: context.repo.repo,
                 run_id: workflow.id
               });
+            }
