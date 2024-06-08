@@ -16,7 +16,7 @@ jobs:
       - name: Get Workflow List
         id: workflow_list
         run: |
-          TOKEN=$TOKEN
+          TOKEN=$GITHUB_TOKEN
           OWNER=$OWNER
           REPO=$REPO
           API_URL="https://api.github.com/repos/$OWNER/$REPO/actions/workflows"
@@ -40,7 +40,7 @@ jobs:
       - name: Delete Other Workflows
         id: delete_other_workflows
         run: |
-          TOKEN=$TOKEN
+          TOKEN=$GITHUB_TOKEN
           OWNER=$OWNER
           REPO=$REPO
           WORKFLOW_LIST=$WORKFLOW_LIST
