@@ -1,36 +1,37 @@
-name: Delete Old Workflows
+name: 删除工作流
+
 on:
-  schedule:
-    - cron: '*/10 * * * *'  # 每天运行一次
-  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - '删除工作流'
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
-  delete_workflows:
+  delete-workflows:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - name: 获取工作流列表
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { data: workflows } = await github.actions.listRepoWorkflows({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
 
-      - name: List Workflows
-        id: list_workflows
-        run: |
-          echo "::set-output name=completed_workflows::$(gh workflow list --json 'status=completed' --jq '.[].id' | head -n -2 | tr 'n' ',')"
-          echo "::set-output name=failed_workflows::$(gh workflow list --json 'status=failed' --jq '.[].id' | head -n -2 | tr 'n' ',')"
+            const completedWorkflows = workflows.filter(workflow => workflow.status === 'completed');
+            const failedWorkflows = workflows.filter(workflow => workflow.status === 'failed');
 
-      - name: Delete Workflows
-        env:
-          COMPLETED_WORKFLOWS: ${{ steps.list_workflows.outputs.completed_workflows }}
-          FAILED_WORKFLOWS: ${{ steps.list_workflows.outputs.failed_workflows }}
-        run: |
-          IFS=',' read -ra COMPLETED_WORKFLOWS_ARRAY <<< "$COMPLETED_WORKFLOWS"
-          IFS=',' read -ra FAILED_WORKFLOWS_ARRAY <<< "$FAILED_WORKFLOWS"
+            const workflowsToDelete = workflows.filter(workflow => !completedWorkflows.includes(workflow) && !failedWorkflows.includes(workflow));
 
-          for workflowId in "${COMPLETED_WORKFLOWS_ARRAY[@]}"; do
-            echo "Deleting completed workflow: $workflowId"
-            gh workflow run delete --workflow-id "$workflowId" --confirm
-          done
-
-          for workflowId in "${FAILED_WORKFLOWS_ARRAY[@]}"; do
-            echo "Deleting failed workflow: $workflowId"
-            gh workflow run delete --workflow-id "$workflowId" --confirm
-          done
+            for (const workflow of workflowsToDelete) {
+              await github.actions.deleteWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: workflow.id
+              });
+            }
