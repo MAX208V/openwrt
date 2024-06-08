@@ -3,7 +3,7 @@ name: Delete Workflows
 on:
   workflow_run:
     workflows:
-      - 'Delete Workflows'
+      - '*'
     types:
       - completed
     branches:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get Workflow List
+      - name: 获取工作流列表
         uses: actions/github-script@v4
         with:
           script: |
