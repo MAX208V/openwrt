@@ -1,5 +1,4 @@
-name: Delete Workflows
-
+name: Delete Old Workflows
 on:
   schedule:
     - cron: '*/10 * * * *'  # 每天运行一次
@@ -8,54 +7,30 @@ on:
 jobs:
   delete_workflows:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Get Workflow List
-        id: workflow_list
+      - name: List Workflows
+        id: list_workflows
         run: |
-          TOKEN=$GITHUB_TOKEN
-          OWNER=$OWNER
-          REPO=$REPO
-          API_URL="https://api.github.com/repos/$OWNER/$REPO/actions/workflows"
-          RESPONSE=$(curl -s -H "Authorization: token $TOKEN" $API_URL)
-          echo "::set-output name=workflow_list::$RESPONSE"
+          echo "::set-output name=completed_workflows::$(gh workflow list --json 'status=completed' --jq '.[].id' | head -n -2 | tr 'n' ',')"
+          echo "::set-output name=failed_workflows::$(gh workflow list --json 'status=failed' --jq '.[].id' | head -n -2 | tr 'n' ',')"
 
-      - name: Filter Completed Workflows
-        id: completed_workflows
+      - name: Delete Workflows
+        env:
+          COMPLETED_WORKFLOWS: ${{ steps.list_workflows.outputs.completed_workflows }}
+          FAILED_WORKFLOWS: ${{ steps.list_workflows.outputs.failed_workflows }}
         run: |
-          WORKFLOW_LIST=$WORKFLOW_LIST
-          COMPLETED_WORKFLOWS=$(echo $WORKFLOW_LIST | jq '.workflows | map(select(.status == "completed")) | sort_by(.completed_at) | reverse | .[:2]')
-          echo "::set-output name=completed_workflows::$COMPLETED_WORKFLOWS"
+          IFS=',' read -ra COMPLETED_WORKFLOWS_ARRAY <<< "$COMPLETED_WORKFLOWS"
+          IFS=',' read -ra FAILED_WORKFLOWS_ARRAY <<< "$FAILED_WORKFLOWS"
 
-      - name: Filter Error Workflows
-        id: error_workflows
-        run: |
-          WORKFLOW_LIST=$WORKFLOW_LIST
-          ERROR_WORKFLOWS=$(echo $WORKFLOW_LIST | jq '.workflows | map(select(.status == "error")) | sort_by(.created_at) | reverse | .[:2]')
-          echo "::set-output name=error_workflows::$ERROR_WORKFLOWS"
-
-      - name: Delete Other Workflows
-        id: delete_other_workflows
-        run: |
-          TOKEN=$GITHUB_TOKEN
-          OWNER=$OWNER
-          REPO=$REPO
-          WORKFLOW_LIST=$WORKFLOW_LIST
-          COMPLETED_WORKFLOWS=$COMPLETED_WORKFLOWS
-          ERROR_WORKFLOWS=$ERROR_WORKFLOWS
-          for WORKFLOW in $(echo $WORKFLOW_LIST | jq -r '.workflows[] | .id'); do
-            if [[ "$WORKFLOW" != $(echo $COMPLETED_WORKFLOWS | jq -r '.[].id') ]] && [[ "$WORKFLOW" != $(echo $ERROR_WORKFLOWS | jq -r '.[].id') ]]; then
-              curl -s -X DELETE -H "Authorization: token $TOKEN" "https://api.github.com/repos/$OWNER/$REPO/actions/workflows/$WORKFLOW"
-            fi
+          for workflowId in "${COMPLETED_WORKFLOWS_ARRAY[@]}"; do
+            echo "Deleting completed workflow: $workflowId"
+            gh workflow run delete --workflow-id "$workflowId" --confirm
           done
 
-      - name: Print Success Message
-        if: steps.delete_other_workflows.outcome == 'success'
-        run: echo "Workflows deleted successfully!"
-
-      - name: Print Failure Message
-        if: steps.delete_other_workflows.outcome == 'failure'
-        run: echo "Failed to delete workflows!"
+          for workflowId in "${FAILED_WORKFLOWS_ARRAY[@]}"; do
+            echo "Deleting failed workflow: $workflowId"
+            gh workflow run delete --workflow-id "$workflowId" --confirm
+          done
