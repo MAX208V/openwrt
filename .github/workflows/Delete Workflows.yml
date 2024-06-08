@@ -10,15 +10,34 @@ on:
       - completed
     branches:
       - main
+
 jobs:
   delete-workflows:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@main
-      with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
-        repository: ${{ github.repository }}
-        retain_days: 0
-        keep_minimum_runs: 2
+      - name: 获取工作流 ID
+        id: get-workflow-id
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { data } = await github.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: context.workflow,
+              per_page: 1
+            });
+
+            console.log(Workflow ID: ${data.workflow_runs[0].id});
+
+            return data.workflow_runs[0].id
+
+      - name: 删除工作流
+        uses: actions/github-script@v4
+        with:
+          script: |
+            await github.actions.deleteWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: ${{ steps.get-workflow-id.outputs }}
+            });
