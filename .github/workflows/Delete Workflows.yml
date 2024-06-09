@@ -12,6 +12,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+
 
       - name: Cleanup workflows
         env:
