@@ -1,24 +1,4 @@
-name: Delete Workflows
 
-on:
-  workflow_dispatch:
-  schedule:
-    # 每天凌晨执行一次
-    - cron: '0 0 * * *'
-
-jobs:
-  cleanup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install jq
-
-      - name: Cleanup workflows
 name: Delete Workflows
 
 on:
