@@ -3,9 +3,9 @@ name: Delete Workflows
 
 on:
   workflow_dispatch:
-  schedule:
+  #schedule:
     # 每天凌晨执行一次
-    - cron: '0 0 * * *'
+    #- cron: '0 0 * * *'
 
 jobs:
   cleanup:
