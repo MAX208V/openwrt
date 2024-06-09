@@ -20,6 +20,7 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
+            token: ${{ secrets.GITHUB_TOKEN }}
             const { data } = await github.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -33,6 +34,7 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
+            token: ${{ secrets.GITHUB_TOKEN }}
             const runId = ${{ steps.get-workflow-id.outputs.id }};
             await github.actions.deleteWorkflowRun({
               owner: context.repo.owner,
